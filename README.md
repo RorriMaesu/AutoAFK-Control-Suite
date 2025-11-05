@@ -9,6 +9,7 @@ AutoAFK Control Suite is a Windows-native AFK choreographer that keeps your curs
 - **Procedural orbit paths** blending elliptical drift, smooth noise, and bias shifts so the camera never loops the same arc twice.
 - **Optional "walkabout" footwork** that triggers short, infrequent WASD taps to mimic idle repositioning.
 - **Micro-saccade jitter** with adjustable cadence for subtle human-like corrections that never cross the line into randomness.
+- **Utility stance automation** keeps the `B` key held for four seconds every three minutes when enabled.
 - **Glass-panel control deck GUI** with toggles, sliders, and live telemetry for every motion parameter.
 - **Global escape hatch**: press `Ctrl + Alt + Q` at any time to halt the choreography; `Ctrl + C` in the console remains a fallback.
 - **Single-file executable build** via PyInstaller so you can keep an easy-to-launch copy in your AFK toolkit.
@@ -22,7 +23,7 @@ AutoAFK Control Suite is a Windows-native AFK choreographer that keeps your curs
 
 ### Interface Map
 
-- **Session Personality**: enable or disable walkabout footwork and micro-saccade camera jitter.
+- **Session Personality**: enable or disable walkabout footwork, micro-saccade camera jitter, and the timed `B` key hold.
 - **Orbit Dynamics**: adjust radius, pace, and motion texture with synchronized sliders/spin boxes.
 - **Session Envelope**: define startup countdown and screen margins for safe edges.
 - **Cadence Windows**: set the min/max intervals for walkabout taps and micro-saccades.

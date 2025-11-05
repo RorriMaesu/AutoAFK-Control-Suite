@@ -38,6 +38,7 @@ VK_W = 0x57
 VK_A = 0x41
 VK_S = 0x53
 VK_D = 0x44
+VK_B = 0x42
 
 
 @dataclass
@@ -49,6 +50,7 @@ class OrbitConfig:
     startup_delay: float = 5.0
     enable_keyboard_steps: bool = True
     enable_saccades: bool = True
+    enable_b_hold: bool = False
     step_interval_range: tuple[float, float] = (9.0, 20.0)
     step_hold_range: tuple[float, float] = (0.045, 0.12)
     saccade_interval_range: tuple[float, float] = (4.5, 9.5)
@@ -246,6 +248,7 @@ class OrbitMover:
         self.jitter = config.jitter
         self._enable_steps = config.enable_keyboard_steps
         self._enable_saccades = config.enable_saccades
+        self._enable_b_hold = config.enable_b_hold
         self._step_interval_range = config.step_interval_range
         self._step_hold_range = config.step_hold_range
         self._saccade_interval_range = config.saccade_interval_range
@@ -267,6 +270,11 @@ class OrbitMover:
         self._active_step_key: int | None = None
         self._step_hold_remaining = 0.0
         self._time_until_step = self._next_step_interval() if self._enable_steps else math.inf
+        self._b_interval = 180.0
+        self._b_duration = 4.0
+        self._b_time_until_press = self._b_interval if self._enable_b_hold else math.inf
+        self._b_hold_remaining = 0.0
+        self._b_active = False
 
     def _next_step_interval(self) -> float:
         low, high = self._step_interval_range
@@ -294,6 +302,13 @@ class OrbitMover:
             except OSError:
                 pass
             self._active_step_key = None
+        if self._b_active:
+            try:
+                self._keyboard.release(VK_B)
+            except OSError:
+                pass
+            self._b_active = False
+        self._b_time_until_press = self._b_interval if self._enable_b_hold else math.inf
 
     def _move_loop(self) -> None:
         theta = random.random() * math.tau
@@ -349,6 +364,32 @@ class OrbitMover:
                     except OSError:
                         pass
                     self._active_step_key = None
+                if self._enable_b_hold:
+                    self._b_time_until_press -= self.interval
+                    if not self._b_active and self._b_time_until_press <= 0.0:
+                        try:
+                            self._keyboard.press(VK_B)
+                        except OSError:
+                            self._b_time_until_press = self._b_interval
+                        else:
+                            self._b_active = True
+                            self._b_hold_remaining = self._b_duration
+                    elif self._b_active:
+                        self._b_hold_remaining -= self.interval
+                        if self._b_hold_remaining <= 0.0:
+                            try:
+                                self._keyboard.release(VK_B)
+                            except OSError:
+                                pass
+                            self._b_active = False
+                            self._b_time_until_press = self._b_interval
+                elif self._b_active:
+                    try:
+                        self._keyboard.release(VK_B)
+                    except OSError:
+                        pass
+                    self._b_active = False
+                    self._b_time_until_press = math.inf
                 if cycle_blend < 1.0:
                     cycle_blend = min(1.0, cycle_blend + self.interval * 0.35)
                 smoothing = 0.5 - 0.5 * math.cos(math.pi * cycle_blend)
@@ -427,6 +468,12 @@ class OrbitMover:
                 except OSError:
                     pass
                 self._active_step_key = None
+            if self._b_active:
+                try:
+                    self._keyboard.release(VK_B)
+                except OSError:
+                    pass
+                self._b_active = False
 
     def _clamp_to_screen(self, x: float, y: float) -> tuple[float, float]:
         margin = self._config.screen_margin
@@ -525,6 +572,7 @@ class AutoAFKApp:
         cfg = self.config
         self._bind_var("enable_steps", tk.BooleanVar(value=cfg.enable_keyboard_steps))
         self._bind_var("enable_saccades", tk.BooleanVar(value=cfg.enable_saccades))
+        self._bind_var("enable_b_hold", tk.BooleanVar(value=cfg.enable_b_hold))
         self._bind_var("base_radius", tk.DoubleVar(value=cfg.base_radius))
         self._bind_var("angular_velocity", tk.DoubleVar(value=cfg.angular_velocity))
         self._bind_var("jitter", tk.DoubleVar(value=cfg.jitter))
@@ -616,6 +664,21 @@ class AutoAFKApp:
             style="Muted.TLabel",
             wraplength=320,
         ).pack(anchor="w", padx=(24, 0), pady=(2, 2))
+
+        b_hold = ttk.Checkbutton(
+            frame,
+            text="Utility stance (hold 'B' every 3 minutes)",
+            variable=self.vars["enable_b_hold"],
+            style="AutoAFK.TCheckbutton",
+        )
+        b_hold.pack(anchor="w", pady=(6, 0))
+        self._interactive_widgets.append(b_hold)
+        ttk.Label(
+            frame,
+            text="Keeps the B key pressed for 4 seconds once per 3-minute cycle.",
+            style="Muted.TLabel",
+            wraplength=320,
+        ).pack(anchor="w", padx=(24, 0), pady=(2, 0))
 
     def _create_orbit_section(self, parent: ttk.Frame) -> None:
         frame = ttk.LabelFrame(parent, text="Orbit Dynamics", style="Card.TLabelframe")
@@ -854,23 +917,35 @@ class AutoAFKApp:
         ]
 
         if snapshot.enable_keyboard_steps:
-            lines.append("- Walkabout footwork: Enabled")
-            lines.append(
-                f"    cadence window: {snapshot.step_interval_range[0]:.1f}s – {snapshot.step_interval_range[1]:.1f}s"
-            )
-            lines.append(
-                f"    tap length window: {snapshot.step_hold_range[0]:.2f}s – {snapshot.step_hold_range[1]:.2f}s"
+            lines.extend(
+                [
+                    "- Walkabout footwork: Enabled",
+                    f"    cadence window: {snapshot.step_interval_range[0]:.1f}s – {snapshot.step_interval_range[1]:.1f}s",
+                    f"    tap length window: {snapshot.step_hold_range[0]:.2f}s – {snapshot.step_hold_range[1]:.2f}s",
+                ]
             )
         else:
             lines.append("- Walkabout footwork: Disabled")
 
         if snapshot.enable_saccades:
-            lines.append("- Micro-saccades: Enabled")
-            lines.append(
-                f"    interval window: {snapshot.saccade_interval_range[0]:.1f}s – {snapshot.saccade_interval_range[1]:.1f}s"
+            lines.extend(
+                [
+                    "- Micro-saccades: Enabled",
+                    f"    interval window: {snapshot.saccade_interval_range[0]:.1f}s – {snapshot.saccade_interval_range[1]:.1f}s",
+                ]
             )
         else:
             lines.append("- Micro-saccades: Disabled")
+
+        if snapshot.enable_b_hold:
+            lines.extend(
+                [
+                    "- Utility stance: Enabled",
+                    "    B hold cadence: 4.0s every 180s",
+                ]
+            )
+        else:
+            lines.append("- Utility stance: Disabled")
 
         self.summary_text.configure(state="normal")
         self.summary_text.delete("1.0", "end")
@@ -885,6 +960,7 @@ class AutoAFKApp:
         cfg = OrbitConfig()
         cfg.enable_keyboard_steps = bool(self.vars["enable_steps"].get())
         cfg.enable_saccades = bool(self.vars["enable_saccades"].get())
+        cfg.enable_b_hold = bool(self.vars["enable_b_hold"].get())
         cfg.base_radius = float(self.vars["base_radius"].get())
         cfg.angular_velocity = float(self.vars["angular_velocity"].get())
         cfg.jitter = float(self.vars["jitter"].get())
@@ -924,6 +1000,7 @@ class AutoAFKApp:
         self.vars["step_hold_max"].set(cfg.step_hold_range[1])
         self.vars["saccade_interval_min"].set(cfg.saccade_interval_range[0])
         self.vars["saccade_interval_max"].set(cfg.saccade_interval_range[1])
+        self.vars["enable_b_hold"].set(cfg.enable_b_hold)
         return cfg
 
     def _drain_queue(self) -> None:
