@@ -2,7 +2,7 @@
 
 [![Support AutoAFK](images/buymeacoffee.png)](https://buymeacoffee.com/rorrimaesu)
 
-AutoAFK Control Suite is a Windows-native AFK choreographer that keeps your cursor orbiting a focal point while sprinkling in optional, human-like WASD taps. It layers smooth orbital math, procedural noise, and gentle cadence shifts to stay believable without looking chaotic. A console control deck lets you tailor the motion profile before every session.
+AutoAFK Control Suite is a Windows-native AFK choreographer that keeps your cursor orbiting a focal point while sprinkling in optional, human-like WASD taps. It layers smooth orbital math, procedural noise, and gentle cadence shifts to stay believable without looking chaotic. The glass-panel control deck GUI lets you tailor the motion profile before every session and ships ready-to-run as a bundled executable.
 
 ## Highlights
 
@@ -15,49 +15,29 @@ AutoAFK Control Suite is a Windows-native AFK choreographer that keeps your curs
 
 ## Quick Start
 
-1. (Optional) Create and activate a virtual environment, then install PyInstaller if you intend to build the executable:
-   ```powershell
-   py -3 -m venv .venv
-   .venv\Scripts\Activate.ps1
-   .venv\Scripts\python.exe -m pip install pyinstaller
-   ```
-2. Launch the AutoAFK Control Suite GUI using Python or the packaged executable:
-   ```powershell
-   # From source
-   .venv\Scripts\python.exe mouse_orbit.py
+1. Download or clone the repository and locate `dist/AutoAFK.exe`.
+2. Double-click the executable. The interface launches full-screen with the latest visual polish and defaults.
+3. Toggle **Walkabout footwork** or **Micro-saccade jitter**, then fine-tune orbit radius, camera pace, and cadence windows using the sliders and spin boxes.
+4. Press **Engage Orbit**; a countdown primes the session before movement begins. Use **Abort Session** or `Ctrl + Alt + Q` to stop at any time.
 
-   # Or run the packaged binary (after building once)
-   dist\AutoAFK.exe
-   ```
-3. In the control deck, adjust the toggles, sliders, and cadence windows, then click **Engage Orbit**.
-4. Position the mouse over the point you want to orbit. AutoAFK handles the countdown, begins the choreography, and listens for `Ctrl + Alt + Q` (or the **Abort Session** button) to stop.
+### Interface Map
 
-## Control Deck Options
-
-| Option | Description |
-| ------ | ----------- |
-| 1 | Start a session with the current profile. |
-| 2 | Toggle walkabout footwork (WASD taps). |
-| 3 | Toggle micro-saccade jitter. |
-| 4 | Adjust orbit radius (pixels). |
-| 5 | Adjust camera pace (radians per second). |
-| 6 | Adjust motion texture (jitter amplitude). |
-| 7 | Set the startup countdown delay. |
-| 8 | Define the interval window for walkabout cadence. |
-| 9 | Define the tap length window for footwork. |
-| 10 | Define the interval window for micro-saccades. |
-| 11 | Set the safety margin from screen edges. |
-| 12 | Restore curated defaults. |
-| S | Display a detailed configuration blueprint. |
-| Q | Exit the suite. |
-
-All numeric prompts accept Enter to keep the current value. Range prompts take comma-separated values (e.g., `6.5,12.0`).
+- **Session Personality**: enable or disable walkabout footwork and micro-saccade camera jitter.
+- **Orbit Dynamics**: adjust radius, pace, and motion texture with synchronized sliders/spin boxes.
+- **Session Envelope**: define startup countdown and screen margins for safe edges.
+- **Cadence Windows**: set the min/max intervals for walkabout taps and micro-saccades.
+- **Session Blueprint**: auto-updating summary plus live telemetry (status, progress, and quick hotkey reminders).
+- **Control Bar**: one-click start/stop actions with clear accent and danger styling.
 
 ## Building the Standalone Executable
 
-AutoAFK ships as a single Python file with only standard-library dependencies. Once PyInstaller is installed, rebuild the binary after any code change with:
+The repo already includes a ready-to-run binary in `dist/AutoAFK.exe`. Rebuilding is only required if you modify `mouse_orbit.py`.
 
 ```powershell
+# Optional developer workflow
+py -3 -m venv .venv
+.venv\Scripts\Activate.ps1
+.venv\Scripts\python.exe -m pip install pyinstaller
 .venv\Scripts\pyinstaller.exe --onefile --name AutoAFK mouse_orbit.py
 ```
 
