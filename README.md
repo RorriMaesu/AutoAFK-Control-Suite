@@ -1,6 +1,6 @@
 # AutoAFK Control Suite
 
-[![Support AutoAFK](images/buymeacoffee.png)](https://buymeacoffee.com/rorrimaesu)
+[![Support AutoAFK](images/buymeacoffeeImage.png)](https://buymeacoffee.com/rorrimaesu)
 
 AutoAFK Control Suite is a Windows-native AFK choreographer that keeps your cursor orbiting a focal point while sprinkling in optional, human-like WASD taps. It layers smooth orbital math, procedural noise, and gentle cadence shifts to stay believable without looking chaotic. The glass-panel control deck GUI lets you tailor the motion profile before every session and ships ready-to-run as a bundled executable.
 
